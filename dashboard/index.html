@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Token Launch Radar — pre-token protocols ranked by implied value</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true"></div>
+    <div>
+      <h1>Token Launch Radar</h1>
+      <p class="tagline">Protocols that record no token yet, ranked by what a launch could be worth — and how to farm each one before it happens.</p>
+    </div>
+  </div>
+  <div class="stats" id="statsLine">Loading the snapshot…</div>
+</header>
+
+<section class="method-strip" aria-label="The model in brief">
+  <strong>The model:</strong>
+  implied value = TVL × <em>category multiple</em> × <em>momentum</em> × <em>maturity</em> × <em>class factor</em>.
+  The multiple is the median market-cap/TVL the snapshot's own tokenised protocols trade at in the same category — the market's yardstick, not a guess.
+  Wrappers of assets that already trade are cut to 3%: their token could only ever claim the fees.
+  <a href="#methodology">Full methodology below</a>
+</section>
+
+<section class="controls" aria-label="Board controls">
+  <label class="ctl grow">Search
+    <input id="q" type="search" placeholder="Protocol name or slug…" autocomplete="off">
+  </label>
+  <label class="ctl">Category
+    <select id="cat"><option value="">All categories</option></select>
+  </label>
+  <label class="ctl">Chain
+    <select id="chain"><option value="">All chains</option></select>
+  </label>
+  <label class="ctl">Implied value at least
+    <select id="min">
+      <option value="0">Any value</option>
+      <option value="10000000">$10M</option>
+      <option value="50000000">$50M</option>
+      <option value="100000000">$100M</option>
+      <option value="500000000">$500M</option>
+      <option value="1000000000">$1B</option>
+    </select>
+  </label>
+  <label class="ctl check">
+    <input id="watch" type="checkbox"> Watchlist only <span class="hint">(the $50M floor)</span>
+  </label>
+  <div class="count" id="countLine" role="status"></div>
+</section>
+
+<main>
+  <section id="detail" hidden aria-label="Protocol detail"></section>
+
+  <div class="table-wrap" id="boardWrap">
+    <table id="board">
+      <thead>
+        <tr>
+          <th data-sort="rank" class="num sortable">#</th>
+          <th data-sort="name" class="sortable">Protocol</th>
+          <th data-sort="category" class="sortable">Category</th>
+          <th data-sort="chains" class="num sortable">Chains</th>
+          <th data-sort="tvl_usd" class="num sortable">TVL</th>
+          <th data-sort="change_7d" class="num sortable">7d</th>
+          <th data-sort="implied_value_usd" class="num sortable">Implied value</th>
+          <th data-sort="ratio" class="num sortable">× TVL</th>
+          <th>Class</th>
+        </tr>
+      </thead>
+      <tbody id="boardBody"></tbody>
+    </table>
+  </div>
+
+  <section class="panel" id="livePanel">
+    <h2>Already trading — the calibration set</h2>
+    <p class="panel-note">These protocols have a token, so they are not on the board. They are why the board's numbers are what they are: each category's multiple is the median of what the market pays for these protocols' TVL. Model value beside actual market cap shows where the yardstick runs hot or cold.</p>
+    <div class="table-wrap">
+      <table id="liveTable">
+        <thead><tr><th>Protocol</th><th>Token</th><th>Category</th><th class="num">TVL</th><th class="num">Market cap</th><th class="num">Model value</th></tr></thead>
+        <tbody id="liveBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="methodology">
+    <h2>Methodology — how every number on this board is derived</h2>
+    <p>Nothing here is a hardcoded list of names. The board is computed from the sealed DefiLlama snapshot alone (fetched once; its date is in the header), in four steps a reader can reproduce:</p>
+    <ol class="steps">
+      <li><strong>Find the pre-token set.</strong> A protocol is a launch candidate when its DefiLlama record carries no token — both its CoinGecko id and its symbol are empty. The board ranks every such protocol holding at least $10M of TVL. The house watchlist (no token, at least $50M of TVL, not a wrapped or bridged product) is marked with a star and is always on the board: it is the floor, never the ceiling.</li>
+      <li><strong>Price a dollar of TVL by category.</strong> For each category, take every protocol whose token already trades and compute market cap ÷ TVL; the category multiple is the median, shrunk toward the global median by peer count so thin categories lean on the whole market. A lending dollar and a bridge dollar are worth different amounts at launch, and the snapshot itself says by how much.</li>
+      <li><strong>Adjust for the protocol, not the story.</strong> Momentum scales the value by the seven-day TVL change, clamped so one noisy week moves it at most −15% to +36%. Maturity scales it by how long the protocol has run with no token, up to +12% at six years: time live means users a launch would have to reward. The class factor then asks what a token could actually claim — a wrapper or staking product of an asset that already trades could only tokenise its fees (×0.03), a bridge conduit's TVL is other protocols' assets in transit (×0.15), and a versioned deployment beside its flagship takes half (×0.5).</li>
+      <li><strong>Rank and show the working.</strong> Rows sort by implied value; every row carries its multiple, its factors and its peer count, and the detail view shows the arithmetic for that protocol. Where the snapshot is silent (no seven-day change, no listing date) the factor is neutral and the detail view says so.</li>
+    </ol>
+    <p>An implied value is this board's own model claim about a token that does not exist. It is not a prediction that a token will be issued, or when, and it is not a price anyone has offered. Protocols the record shows with no token may still have one the record does not carry.</p>
+    <h3>Category multiples from the snapshot</h3>
+    <div class="table-wrap">
+      <table id="multTable">
+        <thead><tr><th>Category</th><th class="num">Tokenised peers</th><th class="num">Multiple used (mcap ÷ TVL)</th></tr></thead>
+        <tbody id="multBody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>Data: DefiLlama's public protocol list, fetched once into the sealed snapshot this board is computed from — <span id="sourceLine"></span>. “Records no token” describes the record, never the world: a protocol may have a token its record does not carry. Farm plans are starting points for your own research, not financial advice; every step's cost is an estimate at snapshot time.</p>
+</footer>
+
+<script src="../data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
